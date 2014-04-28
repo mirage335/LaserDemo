@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Top Block
-# Generated: Sun Apr 27 14:34:09 2014
+# Generated: Mon Apr 28 02:48:54 2014
 ##################################################
 
 from gnuradio import analog
@@ -27,7 +27,7 @@ class top_block(grc_wxgui.top_block_gui):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 32000
+        self.samp_rate = samp_rate = 8000
         self.offset = offset = 0.0003
         self.multiple = multiple = 2
         self.biasTwo = biasTwo = 0
@@ -200,26 +200,31 @@ class top_block(grc_wxgui.top_block_gui):
         	proportion=1,
         )
         self.Add(_ampOne_sizer)
+        self.blocks_throttle_0_0 = blocks.throttle(gr.sizeof_float*1, samp_rate)
+        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_float*1, samp_rate)
         self.blocks_multiply_xx_1 = blocks.multiply_vff(1)
         self.blocks_multiply_xx_0 = blocks.multiply_vff(1)
         self.blocks_add_const_vxx_0_0 = blocks.add_const_vff((biasOne, ))
         self.blocks_add_const_vxx_0 = blocks.add_const_vff((biasTwo, ))
-        self.audio_sink_0 = audio.sink(samp_rate, "default", False)
-        self.analog_sig_source_x_2 = analog.sig_source_f(samp_rate, analog.GR_SIN_WAVE, 0.0001, 0.5, 0)
+        self.audio_sink_0 = audio.sink(samp_rate, "default", True)
+        (self.audio_sink_0).set_processor_affinity([1])
+        self.analog_sig_source_x_2 = analog.sig_source_f(samp_rate, analog.GR_SIN_WAVE, 1, 0.5, 0)
         self.analog_sig_source_x_1 = analog.sig_source_f(samp_rate, analog.GR_SIN_WAVE, baseFrequency*multiple+offset, ampTwo, 0)
         self.analog_sig_source_x_0 = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, baseFrequency, ampOne, 0)
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.analog_sig_source_x_1, 0), (self.blocks_add_const_vxx_0, 0))
-        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_add_const_vxx_0_0, 0))
         self.connect((self.blocks_add_const_vxx_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.blocks_add_const_vxx_0_0, 0), (self.blocks_multiply_xx_1, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.audio_sink_0, 1))
         self.connect((self.blocks_multiply_xx_1, 0), (self.audio_sink_0, 0))
         self.connect((self.analog_sig_source_x_2, 0), (self.blocks_multiply_xx_1, 1))
         self.connect((self.analog_sig_source_x_2, 0), (self.blocks_multiply_xx_0, 0))
+        self.connect((self.analog_sig_source_x_1, 0), (self.blocks_throttle_0_0, 0))
+        self.connect((self.blocks_throttle_0_0, 0), (self.blocks_add_const_vxx_0, 0))
+        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_throttle_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.blocks_add_const_vxx_0_0, 0))
 
 
 # QT sink close method reimplementation
@@ -230,7 +235,9 @@ class top_block(grc_wxgui.top_block_gui):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.analog_sig_source_x_1.set_sampling_freq(self.samp_rate)
+        self.blocks_throttle_0_0.set_sample_rate(self.samp_rate)
         self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.analog_sig_source_x_2.set_sampling_freq(self.samp_rate)
 
     def get_offset(self):
@@ -238,18 +245,18 @@ class top_block(grc_wxgui.top_block_gui):
 
     def set_offset(self, offset):
         self.offset = offset
-        self.analog_sig_source_x_1.set_frequency(self.baseFrequency*self.multiple+self.offset)
         self._offset_slider.set_value(self.offset)
         self._offset_text_box.set_value(self.offset)
+        self.analog_sig_source_x_1.set_frequency(self.baseFrequency*self.multiple+self.offset)
 
     def get_multiple(self):
         return self.multiple
 
     def set_multiple(self, multiple):
         self.multiple = multiple
-        self.analog_sig_source_x_1.set_frequency(self.baseFrequency*self.multiple+self.offset)
         self._multiple_slider.set_value(self.multiple)
         self._multiple_text_box.set_value(self.multiple)
+        self.analog_sig_source_x_1.set_frequency(self.baseFrequency*self.multiple+self.offset)
 
     def get_biasTwo(self):
         return self.biasTwo
@@ -293,9 +300,9 @@ class top_block(grc_wxgui.top_block_gui):
 
     def set_ampOne(self, ampOne):
         self.ampOne = ampOne
-        self.analog_sig_source_x_0.set_amplitude(self.ampOne)
         self._ampOne_slider.set_value(self.ampOne)
         self._ampOne_text_box.set_value(self.ampOne)
+        self.analog_sig_source_x_0.set_amplitude(self.ampOne)
 
 if __name__ == '__main__':
     import ctypes
